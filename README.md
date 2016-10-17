@@ -1,11 +1,11 @@
 Just Icons for Google Chrome
 ----------------------------------------
 
+Install from Chrome Web Store: https://chrome.google.com/webstore/detail/just-icons/cebjhochebphokcpenikgbljlbmlhefm
+
+
 **Click to hide titles of your bookmarks.
 Click again to restore them.**
-
-
-TODO: link to chrome store
 
 
 

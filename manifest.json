@@ -2,7 +2,7 @@
   "manifest_version": 2,
 
   "name": "Just Icons",
-  "description": "Click to hide titles of your bookmarks.\nClick again to restore them.\n\nPRO TIP: for the safety of your bookmarks please backup them before using the extension - howto: https://support.google.com/chrome/answer/96816?hl=en. \nWhy? Actually the extension removes (not simply hides!) titles from the bookmarks and stores them in Extension's memory for future restoration. It means that if you use Chrome Sync, bookmarks on your other devices will be affected. If your Chrome crashes for some reason, it's possible that you'll be left without a way to restore bookmark titles. You've been warned ;). \nPRO TIP 2: before uninstalling the extension (but why would you?!), use it to show the bookmark titles back. Otherwise the titles will be lost.\n\nFeel free to ask questions.\nEnjoy your new aesthetic bookmarks bar!\n\nhttps://github.com/ptomaszek/just-icons",
+  "description": "Click to hide titles of your bookmarks.\nClick again to restore them.",
   "version": "1.0",
 
   "background": {
