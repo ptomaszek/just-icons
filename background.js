@@ -66,6 +66,3 @@ var putNameOn = function(node) {
         chrome.bookmarks.update(node.id, {'title' : originalTitle});
     });
 }
-
-
-//chrome.management.onDisabled.addListener(function callback) TODO revert
