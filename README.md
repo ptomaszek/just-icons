@@ -1,4 +1,4 @@
-Just Icons for Google Chrome
+Just Icons on the Bookmarks Bar in Chrome
 ----------------------------------------
 
 Install from Chrome Web Store: https://chrome.google.com/webstore/detail/just-icons/cebjhochebphokcpenikgbljlbmlhefm
