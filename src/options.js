@@ -14,7 +14,7 @@ function save_options() {
 
 function restore_options() {
     chrome.storage.local.get({
-        bookmarksBarOnly: true
+        bookmarksBarOnly: false
     }, function (items) {
         document.getElementById('bookmarksBarOnly').checked = items.bookmarksBarOnly;
     });

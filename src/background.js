@@ -10,31 +10,13 @@ chrome.runtime.onInstalled.addListener(details => {
         });
     } else if (details.reason === "update") {
         console.log("Updating...")
-
         if (details.previousVersion === "1.0") {
-            return getFromLocal('namesOn')
-            .then(resp => {
-                if (resp.namesOn) { //if titles shown, do nothing
-                    return Promise.resolve()
-                }
-                // if titles hidden
-                console.debug("Unhiding the titles in subfolders...")
-                return putNamesOn(false)
-                .then(takeNamesOff(true))
-            })
-            .then(() => {
-                    chrome.notifications.create('', {
-                        title: 'My Dearest Aesthetic Minimalist Friend',
-                        type: "basic",
-                        iconUrl: "icons/icon_48.png",
-                        message: "\n\nNow I'm going to restore titles in your subfolders, as this is something many folks were asking for \n\nYou can now tune this hiding behavior in Options",
-                        requireInteraction: true
-                    });
-                    return Promise.resolve();
-                }
-            )
-            .catch(e => {
-                console.error(e);
+            chrome.notifications.create('', {
+                title: 'My Dearest Aesthetic Minimalist Friend',
+                type: "basic",
+                iconUrl: "icons/icon_48.png",
+                message: "Now you can tune hiding behavior in Options!",
+                requireInteraction: true
             });
         }
     }
@@ -48,7 +30,7 @@ chrome.action.onClicked.addListener(() => {
 });
 
 let runExtension = () => {
-    return getFromLocal({'namesOn': true, 'bookmarksBarOnly': true})
+    return getFromLocal({namesOn: true, bookmarksBarOnly: false})
     .then(data => {
         let putNamesOnWithLastClick = data['namesOn'];
         let bookmarksBarOnly = data['bookmarksBarOnly'];

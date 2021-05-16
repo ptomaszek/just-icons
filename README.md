@@ -5,6 +5,8 @@ Install from Chrome Web Store: https://chrome.google.com/webstore/detail/just-ic
 
 **Click to hide titles of your bookmarks. Click again to restore them.**
 
+Tune hiding behavior in Options.
+
 **PRO TIP**: for the safety of your bookmarks please backup them before the very first use of the extension -
 howto: https://support.google.com/chrome/answer/96816?hl=en
 Why? Actually the extension removes (not simply hides!) titles from the bookmarks and stores them in Extension's memory for
