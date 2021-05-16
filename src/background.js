@@ -1,5 +1,6 @@
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason === "install") {
+        console.log("Installing...")
         chrome.notifications.create('', {
             title: 'My Dearest Aesthetic Minimalist Friend',
             type: "basic",
@@ -8,14 +9,9 @@ chrome.runtime.onInstalled.addListener(details => {
             requireInteraction: true
         });
     } else if (details.reason === "update") {
+        console.log("Updating...")
+
         if (details.previousVersion === "1.0") {
-            chrome.notifications.create('', {
-                title: 'My Dearest Aesthetic Minimalist Friend',
-                type: "basic",
-                iconUrl: "icons/icon_48.png",
-                message: "\n\nNow I'm going to restore titles in your subfolders, as this is something many folks were asking for \n\nYou can now tune this hiding behavior in Options",
-                requireInteraction: true
-            });
             return getFromLocal('namesOn')
             .then(resp => {
                 if (resp.namesOn) { //if titles shown, do nothing
@@ -26,6 +22,17 @@ chrome.runtime.onInstalled.addListener(details => {
                 return putNamesOn(false)
                 .then(takeNamesOff(true))
             })
+            .then(() => {
+                    chrome.notifications.create('', {
+                        title: 'My Dearest Aesthetic Minimalist Friend',
+                        type: "basic",
+                        iconUrl: "icons/icon_48.png",
+                        message: "\n\nNow I'm going to restore titles in your subfolders, as this is something many folks were asking for \n\nYou can now tune this hiding behavior in Options",
+                        requireInteraction: true
+                    });
+                    return Promise.resolve();
+                }
+            )
             .catch(e => {
                 console.error(e);
             });
