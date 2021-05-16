@@ -1,4 +1,4 @@
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener(details => {
     if (details.reason === "install") {
         chrome.notifications.create('', {
             title: 'My Dearest Aesthetic Minimalist Friend',
@@ -16,97 +16,154 @@ chrome.runtime.onInstalled.addListener((details) => {
                 message: "\n\nNow I'm going to restore titles in your subfolders, as this is something many folks were asking for \n\nYou can now tune this hiding behavior in Options",
                 requireInteraction: true
             });
-            console.debug("Unhiding the titles in subfolders...")
-            runExtension();
-            runExtension();
+            return getFromLocal('namesOn')
+            .then(resp => {
+                if (resp.namesOn) { //if titles shown, do nothing
+                    return Promise.resolve()
+                }
+                // if titles hidden
+                console.debug("Unhiding the titles in subfolders...")
+                return putNamesOn(false)
+                .then(takeNamesOff(true))
+            })
+            .catch(e => {
+                console.error(e);
+            });
         }
     }
 });
 
-chrome.browserAction.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener(() => {
     runExtension()
+    .catch(e => {
+        console.error(e);
+    });
 });
 
 let runExtension = () => {
-    chrome.storage.local.get({'namesOn': true, 'bookmarksBarOnly': true}, (data) => {
+    return getFromLocal({'namesOn': true, 'bookmarksBarOnly': true})
+    .then(data => {
         let putNamesOnWithLastClick = data['namesOn'];
         let bookmarksBarOnly = data['bookmarksBarOnly'];
         if (putNamesOnWithLastClick) {
-            chrome.storage.local.set({'namesOn': false}, () => {
-                takeNamesOff(bookmarksBarOnly);
-            });
+            return takeNamesOff(bookmarksBarOnly)
+            .then(setInLocal({'namesOn': false}))
         } else {
-            chrome.storage.local.set({'namesOn': true}, () => {
-                putNamesOn(bookmarksBarOnly);
-            });
+            putNamesOn(bookmarksBarOnly)
+            .then(setInLocal({'namesOn': true}))
         }
     });
 }
 
 let takeNamesOff = (bookmarksBarOnly) => {
     console.debug("Taking titles off...")
-    chrome.bookmarks.getTree((bookmarkTree) => {
+
+    return chrome.bookmarks.getTree()
+    .then(bookmarkTree => {
         let bookmarkBar = bookmarkTree[0]['children'][0];
         if (bookmarksBarOnly) {
             console.debug("bookmarks bar items only")
-            performOnlyFor(bookmarkBar, takeNameOff);
+            return performOnlyFor(bookmarkBar, takeNameOff);
         } else {
             console.debug("every item")
-            performForAllIn(bookmarkBar, takeNameOff);
+            return performForAllIn(bookmarkBar, takeNameOff);
         }
     });
 }
 
 let putNamesOn = (bookmarksBarOnly) => {
     console.debug("Putting titles back for...")
-    chrome.bookmarks.getTree((bookmarkTree) => {
+
+    return chrome.bookmarks.getTree()
+    .then(bookmarkTree => {
         let bookmarkBar = bookmarkTree[0]['children'][0];
         if (bookmarksBarOnly) {
             console.debug("bookmarks bar items only")
-            performOnlyFor(bookmarkBar, putNameOn);
+            return performOnlyFor(bookmarkBar, putNameOn);
         } else {
             console.debug("every item")
-            performForAllIn(bookmarkBar, putNameOn);
+            return performForAllIn(bookmarkBar, putNameOn);
         }
     });
 }
 
 let performOnlyFor = (node, action) => {
+    const promises = [];
+
     for (let i = 0; i < node['children'].length; i++) {
         let bookmarkBarItem = node['children'][i];
-        action(bookmarkBarItem);
+        promises.push(action(bookmarkBarItem));
     }
+
+    return Promise.all(promises)
 }
 
 let performForAllIn = (node, action) => {
+    const promises = [];
+
     if (node.hasOwnProperty('children')) {
         for (let i = 0; i < node['children'].length; i++) {
             let folder = node['children'][i];
-            action(folder);
-            performForAllIn(folder, action);
+            promises.push(action(folder))
+            promises.push(performForAllIn(folder, action));
         }
     } else {
-        action(node);
+        promises.push(action(node));
     }
+
+    return Promise.all(promises)
+    .then((results) => {
+        console.log("All done", results);
+    })
+
 }
 
 let takeNameOff = (node) => {
     let original = {};
     if (!node['title']) {
-        return;
+        return Promise.resolve();
     }
     original[node['id']] = node['title'];
 
-    chrome.storage.local.set(original, () => {
-        chrome.bookmarks.update(node.id, {'title': ''});
+    return setInLocal(original)
+    .then(() => {
+        return chrome.bookmarks.update(node.id, {'title': ''});
     });
 }
 
 let putNameOn = (node) => {
-    chrome.storage.local.get(null, (data) => {
+    return getFromLocal(null)
+    .then(data => {
         let originalTitle = data[node.id];
         if (originalTitle) {
-            chrome.bookmarks.update(node.id, {'title': originalTitle});
+            return chrome.bookmarks.update(node.id, {'title': originalTitle})
         }
+        return Promise.resolve();
     });
+}
+
+let setInLocal = (key, value) => {
+    return new Promise((resolve, reject) =>
+        chrome.storage.local.set(key, () => {
+            if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError.message);
+                reject(chrome.runtime.lastError.message);
+            } else {
+                resolve();
+            }
+        })
+    );
+}
+
+let getFromLocal = (query) => {
+    return new Promise((resolve, reject) =>
+        chrome.storage.local.get(query, items => {
+            if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError.message);
+                reject(chrome.runtime.lastError.message);
+            } else {
+                resolve(items);
+            }
+        })
+    );
 }
