@@ -1,43 +1,81 @@
-chrome.runtime.onInstalled.addListener((object) => {
-    chrome.notifications.create('', {
-        title: 'My Dearest Aesthetic Minimalist Friend',
-        type: "basic",
-        iconUrl: "icons/icon_48.png",
-        message: 'Click the extension icon to show/hide bookmarks names! \n\n(PRO TIP: for the safety of your bookmarks please backup them before the first use).',
-        contextMessage: 'Feel free to dismiss the popup now.',
-        requireInteraction: true
-    });
+chrome.runtime.onInstalled.addListener((details) => {
+    if (details.reason === "install") {
+        chrome.notifications.create('', {
+            title: 'My Dearest Aesthetic Minimalist Friend',
+            type: "basic",
+            iconUrl: "icons/icon_48.png",
+            message: 'Click the extension icon to show/hide bookmarks names! Tune behavior in Options \n\n(PRO TIP: for the safety of your bookmarks please backup them before the first use).',
+            requireInteraction: true
+        });
+    } else if (details.reason === "update") {
+        if (details.previousVersion === "1.0") {
+            chrome.notifications.create('', {
+                title: 'My Dearest Aesthetic Minimalist Friend',
+                type: "basic",
+                iconUrl: "icons/icon_48.png",
+                message: "\n\nNow I'm going to restore titles in your subfolders, as this is something many folks were asking for \n\nYou can now tune this hiding behavior in Options",
+                requireInteraction: true
+            });
+            console.debug("Unhiding the titles in subfolders...")
+            runExtension();
+            runExtension();
+        }
+    }
 });
 
 chrome.browserAction.onClicked.addListener((tab) => {
-    chrome.storage.local.get({'namesOn': true}, (data) => {
-        if (data['namesOn']) {
-            chrome.storage.local.clear(() => {
-                chrome.storage.local.set({'namesOn': false}, () => {
-                    takeNamesOff();
-                });
+    runExtension()
+});
+
+let runExtension = () => {
+    chrome.storage.local.get({'namesOn': true, 'bookmarksBarOnly': true}, (data) => {
+        let putNamesOnWithLastClick = data['namesOn'];
+        let bookmarksBarOnly = data['bookmarksBarOnly'];
+        if (putNamesOnWithLastClick) {
+            chrome.storage.local.set({'namesOn': false}, () => {
+                takeNamesOff(bookmarksBarOnly);
             });
         } else {
             chrome.storage.local.set({'namesOn': true}, () => {
-                putNamesOn();
+                putNamesOn(bookmarksBarOnly);
             });
         }
     });
-});
+}
 
-let takeNamesOff = () => {
+let takeNamesOff = (bookmarksBarOnly) => {
     console.debug("Taking titles off...")
     chrome.bookmarks.getTree((bookmarkTree) => {
         let bookmarkBar = bookmarkTree[0]['children'][0];
-        performForAllIn(bookmarkBar, takeNameOff);
+        if (bookmarksBarOnly) {
+            console.debug("bookmarks bar items only")
+            performOnlyFor(bookmarkBar, takeNameOff);
+        } else {
+            console.debug("every item")
+            performForAllIn(bookmarkBar, takeNameOff);
+        }
     });
 }
 
-let putNamesOn = () => {
+let putNamesOn = (bookmarksBarOnly) => {
+    console.debug("Putting titles back for...")
     chrome.bookmarks.getTree((bookmarkTree) => {
         let bookmarkBar = bookmarkTree[0]['children'][0];
-        performForAllIn(bookmarkBar, putNameOn);
+        if (bookmarksBarOnly) {
+            console.debug("bookmarks bar items only")
+            performOnlyFor(bookmarkBar, putNameOn);
+        } else {
+            console.debug("every item")
+            performForAllIn(bookmarkBar, putNameOn);
+        }
     });
+}
+
+let performOnlyFor = (node, action) => {
+    for (let i = 0; i < node['children'].length; i++) {
+        let bookmarkBarItem = node['children'][i];
+        action(bookmarkBarItem);
+    }
 }
 
 let performForAllIn = (node, action) => {
@@ -54,6 +92,9 @@ let performForAllIn = (node, action) => {
 
 let takeNameOff = (node) => {
     let original = {};
+    if (!node['title']) {
+        return;
+    }
     original[node['id']] = node['title'];
 
     chrome.storage.local.set(original, () => {
@@ -62,9 +103,10 @@ let takeNameOff = (node) => {
 }
 
 let putNameOn = (node) => {
-    console.debug("Putting titles back...")
     chrome.storage.local.get(null, (data) => {
         let originalTitle = data[node.id];
-        chrome.bookmarks.update(node.id, {'title': originalTitle});
+        if (originalTitle) {
+            chrome.bookmarks.update(node.id, {'title': originalTitle});
+        }
     });
 }
