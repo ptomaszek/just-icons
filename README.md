@@ -5,16 +5,13 @@ Install from Chrome Web Store: https://chrome.google.com/webstore/detail/just-ic
 
 **Click to hide titles of your bookmarks. Click again to restore them.**
 
-Tune hiding behavior in Options.
+In Options, you can tune scope of hiding, i.e. whether to include subfolders.
 
-**PRO TIP**: for the safety of your bookmarks please backup them before the very first use of the extension -
-howto: https://support.google.com/chrome/answer/96816?hl=en
-Why? Actually the extension removes (not simply hides!) titles from the bookmarks and stores them in Extension's memory for
-future restoration. It means that if you use Chrome Sync, bookmarks on your other devices will be affected. If your Chrome
-crashes for some reason, it's possible that you'll be left without a way to restore bookmark titles. You've been warned ;).
+**IMPORTANT**: Restore the bookmarks titles before uninstalling the extension. Otherwise, the
+titles will be lost. 
+Unfortunately, Chrome doesn't allow the extension to detect its uninstallation and to handle restoration automatically. 
 
-**PRO TIP 2**: before uninstalling the extension (but why would you?!), use it to show the bookmark titles back. Otherwise the
-titles will be lost.**
+Best back up bookmarks before the very first use of the extension - howto https://support.google.com/chrome/answer/96816?hl=en
 
 Feel free to ask questions.
 
