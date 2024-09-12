@@ -32,26 +32,26 @@ chrome.action.onClicked.addListener(() => {
 let runExtension = () => {
     return getFromLocal({namesOn: true, bookmarksBarOnly: false})
     .then(data => {
-        let putNamesOnWithLastClick = data['namesOn'];
+        let namesOnCurrently = data['namesOn'];
         let bookmarksBarOnly = data['bookmarksBarOnly'];
-        if (putNamesOnWithLastClick) {
+        if (namesOnCurrently) {
             return takeNamesOff(bookmarksBarOnly)
-            .then(setInLocal({'namesOn': false}))
+                .then(setInLocal({'namesOn': false}))
         } else {
-            putNamesOn(bookmarksBarOnly)
-            .then(setInLocal({'namesOn': true}))
+            putNamesOn()
+                .then(setInLocal({'namesOn': true}))
         }
     });
 }
 
 let takeNamesOff = (bookmarksBarOnly) => {
-    console.debug("Taking titles off...")
+    console.debug("Taking titles off...");
 
     return chrome.bookmarks.getTree()
     .then(bookmarkTree => {
         let bookmarkBar = bookmarkTree[0]['children'][0];
         if (bookmarksBarOnly) {
-            console.debug("bookmarks bar items only")
+            console.debug("bookmarks bar items only");
             return performOnlyFor(bookmarkBar, takeNameOff);
         } else {
             console.debug("every item")
@@ -60,19 +60,13 @@ let takeNamesOff = (bookmarksBarOnly) => {
     });
 }
 
-let putNamesOn = (bookmarksBarOnly) => {
+let putNamesOn = () => {
     console.debug("Putting titles back for...")
 
     return chrome.bookmarks.getTree()
     .then(bookmarkTree => {
         let bookmarkBar = bookmarkTree[0]['children'][0];
-        if (bookmarksBarOnly) {
-            console.debug("bookmarks bar items only")
-            return performOnlyFor(bookmarkBar, putNameOn);
-        } else {
-            console.debug("every item")
-            return performForAllIn(bookmarkBar, putNameOn);
-        }
+        return performForAllIn(bookmarkBar, putNameOn);
     });
 }
 
