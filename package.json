@@ -1,0 +1,17 @@
+{
+  "engines": {
+    "npm": ">=10.9.2",
+    "node": ">=23.9.0"
+  },
+  "devDependencies": {
+    "shx": "^0.3.4",
+    "web-ext": "^8.4.0"
+  },
+  "scripts": {
+    "prepare-dependencies": "npm install && node prepareDependencies.js",
+
+    "web-ext:chromium-test": "mkdir -p bundles/chromium && shx cp -r src/* bundles/chromium && shx cp src/manifest.json bundles/chromium && web-ext run --source-dir=bundles/chromium --chromium-profile='/home/pp/.config/chromium/Profile 11' --target=chromium --start-url=chrome-extension://nobecmkkkgmggjjhpbghmijaagfjjggi/options.html",
+
+    "clean": "rm -r node_modules && rm -r src/js-ext && rm -r bundles"
+  }
+}
