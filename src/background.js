@@ -1,23 +1,30 @@
+const extensionScopeDefaults = {
+    bookmarksBar_applyToFolders : true,
+    bookmarksBar_applyToPages : true,
+    inside_applyToFolders : true,
+    inside_applyToPages : true
+};
+
 chrome.runtime.onInstalled.addListener(details => {
     if (details.reason === "install") {
-        console.log("Installing...")
+        console.debug("Installing...")
         chrome.notifications.create('', {
             title: 'My Dearest Aesthetic Minimalist Friend',
             type: "basic",
             iconUrl: "icons/icon_48.png",
-            message: 'Click the extension icon to show/hide bookmarks names! Tune behavior in Options \n\n(PRO TIP: for the safety of your bookmarks please backup them before the first use).',
-            requireInteraction: true
-        });
+            message: 'Click the extension icon to show/hide bookmarks names! Tune behavior in Options \n\n(PRO TIP: for the safety of your bookmarks please backup them before the first use).'
+        },
+        () => chrome.runtime.openOptionsPage());
     } else if (details.reason === "update") {
-        console.log("Updating...")
-        if (details.previousVersion === "1.0") {
+        console.debug("Updating...")
+        if (details.previousVersion === "1.2.1") {
             chrome.notifications.create('', {
                 title: 'My Dearest Aesthetic Minimalist Friend',
                 type: "basic",
                 iconUrl: "icons/icon_48.png",
-                message: "Now you can tune hiding behavior in Options!",
-                requireInteraction: true
-            });
+                message: "Now you can tune even more hiding behaviors in Options!"
+            },
+            () => chrome.runtime.openOptionsPage());
         }
     }
 });
@@ -30,12 +37,12 @@ chrome.action.onClicked.addListener(() => {
 });
 
 let runExtension = () => {
-    return getFromLocal({namesOn: true, bookmarksBarOnly: false})
+    return getFromLocal({ namesOn: true })
     .then(data => {
         let namesOnCurrently = data['namesOn'];
-        let bookmarksBarOnly = data['bookmarksBarOnly'];
+
         if (namesOnCurrently) {
-            return takeNamesOff(bookmarksBarOnly)
+            return takeNamesOff()
                 .then(setInLocal({'namesOn': false}))
         } else {
             putNamesOn()
@@ -44,66 +51,73 @@ let runExtension = () => {
     });
 }
 
-let takeNamesOff = (bookmarksBarOnly) => {
+let takeNamesOff = () => {
     console.debug("Taking titles off...");
 
-    return chrome.bookmarks.getTree()
-    .then(bookmarkTree => {
-        let bookmarkBar = bookmarkTree[0]['children'][0];
-        if (bookmarksBarOnly) {
-            console.debug("bookmarks bar items only");
-            return performOnlyFor(bookmarkBar, takeNameOff);
-        } else {
-            console.debug("every item")
-            return performForAllIn(bookmarkBar, takeNameOff);
-        }
+    return Promise.all([
+           getBookmarksBar(),
+           getFromLocal({ extensionScope : extensionScopeDefaults }).then(data => Promise.resolve(data.extensionScope))
+        ]).then(([bookmarksBar, extensionScope]) => {
+            return performFor(bookmarksBar, takeNameOff, (node) => meetsHidingCriteria(node, extensionScope));
     });
+}
+
+let meetsHidingCriteria = (node, scope) => {
+    return (
+          (scope.bookmarksBar_applyToFolders && isOnBookmarksBar(node) && isFolder(node))
+          || (scope.bookmarksBar_applyToPages && isOnBookmarksBar(node) && !isFolder(node))
+          || (scope.inside_applyToFolders && !isOnBookmarksBar(node) && isFolder(node))
+          || (scope.inside_applyToPages && !isOnBookmarksBar(node) && !isFolder(node))
+    );
 }
 
 let putNamesOn = () => {
-    console.debug("Putting titles back for...")
+    console.debug("Putting titles back...")
 
+    return getBookmarksBar()
+        .then(bookmarksBar => {
+             return performFor(bookmarksBar, putNameOn, (node) => { return true });
+        });
+}
+
+let isOnBookmarksBar = (bookmark) => {
+    return bookmark.parentId == 1;
+}
+
+let isFolder = (bookmark) => {
+    return !Object.hasOwn(bookmark, 'url');
+}
+
+let getBookmarksBar = () => {
     return chrome.bookmarks.getTree()
-    .then(bookmarkTree => {
-        let bookmarkBar = bookmarkTree[0]['children'][0];
-        return performForAllIn(bookmarkBar, putNameOn);
-    });
+        .then(tree => Promise.resolve(tree[0]['children'][0]));
 }
 
-let performOnlyFor = (node, action) => {
-    const promises = [];
-
-    for (let i = 0; i < node['children'].length; i++) {
-        let bookmarkBarItem = node['children'][i];
-        promises.push(action(bookmarkBarItem));
-    }
-
-    return Promise.all(promises)
-}
-
-let performForAllIn = (node, action) => {
+let performFor = (node, action, criteria) => {
     const promises = [];
 
     if (node.hasOwnProperty('children')) {
         for (let i = 0; i < node['children'].length; i++) {
             let folder = node['children'][i];
-            promises.push(action(folder))
-            promises.push(performForAllIn(folder, action));
+
+            if (criteria(folder)) {
+                promises.push(action(folder));
+            }
+
+            promises.push(performFor(folder, action, criteria));
         }
     } else {
-        promises.push(action(node));
+        if (criteria(node)) {
+            promises.push(action(node));
+        }
     }
 
-    return Promise.all(promises)
-    .then((results) => {
-        console.log("All done", results);
-    })
-
+    return Promise.all(promises);
 }
 
 let takeNameOff = (node) => {
     let original = {};
-    if (!node['title']) {
+    if (!node['title']) { // as a safety measure, do not save an empty title
         return Promise.resolve();
     }
     original[node['id']] = node['title'];
@@ -115,6 +129,10 @@ let takeNameOff = (node) => {
 }
 
 let putNameOn = (node) => {
+    if (node['title']) { // as a safety measure, do not restore title if already exists
+        return Promise.resolve();
+    }
+
     return getFromLocal(null)
     .then(data => {
         let originalTitle = data[node.id];

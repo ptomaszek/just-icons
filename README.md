@@ -5,7 +5,9 @@ Install from Chrome Web Store: https://chrome.google.com/webstore/detail/just-ic
 
 **Click to hide titles of your bookmarks. Click again to restore them.**
 
-In Options, you can tune scope of hiding, i.e. whether to include subfolders.
+In Options, you can tune hiding scope:
+
+![](options.png)
 
 IMPORTANT: Restore the bookmarks titles before uninstalling the extension. Otherwise, the
 titles will be lost.

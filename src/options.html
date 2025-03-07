@@ -2,11 +2,31 @@
 <html>
 <head><title>Just Icons - options</title></head>
 <body>
+<h2>Adjust hiding scope</h2>
 
+<h3>On the bookmarks bar:</h3>
 <label>
-    <input type="checkbox" id="bookmarksBarOnly">
-    Use on bookmarks bar only and ignore subfolders
+    <input type="checkbox" id="bookmarksBar_applyToFolders">
+    Apply to folders
 </label>
+<br>
+<label>
+    <input type="checkbox" id="bookmarksBar_applyToPages">
+    Apply to pages
+</label>
+<br>
+<h3>Inside folders of the bookmarks bar:</h3>
+<label>
+    <input type="checkbox" id="inside_applyToFolders">
+    Apply to folders
+</label>
+<br>
+<label>
+    <input type="checkbox" id="inside_applyToPages">
+    Apply to pages
+</label>
+
+<p></p>
 
 <div id="status"></div>
 <button id="save">Save</button>

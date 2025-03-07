@@ -1,8 +1,19 @@
+const extensionScopeDefaults = {
+    bookmarksBar_applyToFolders : true,
+    bookmarksBar_applyToPages : true,
+    inside_applyToFolders : true,
+    inside_applyToPages : true
+};
+
 // Saves options to chrome.storage
 function save_options() {
-    let bookmarksBarOnly = document.getElementById('bookmarksBarOnly').checked;
     chrome.storage.local.set({
-        bookmarksBarOnly: bookmarksBarOnly,
+        extensionScope: {
+            bookmarksBar_applyToFolders: document.getElementById('bookmarksBar_applyToFolders').checked,
+            bookmarksBar_applyToPages: document.getElementById('bookmarksBar_applyToPages').checked,
+            inside_applyToFolders: document.getElementById('inside_applyToFolders').checked,
+            inside_applyToPages: document.getElementById('inside_applyToPages').checked
+        },
     }, function () {
         let status = document.getElementById('status');
         status.textContent = 'Options saved';
@@ -13,10 +24,13 @@ function save_options() {
 }
 
 function restore_options() {
-    chrome.storage.local.get({
-        bookmarksBarOnly: false
-    }, function (items) {
-        document.getElementById('bookmarksBarOnly').checked = items.bookmarksBarOnly;
+    chrome.storage.local.get({ extensionScope: {} }, function (items) {
+        const finalScope = { ...extensionScopeDefaults, ...items.extensionScope }; // merge with defaults
+
+        document.getElementById('bookmarksBar_applyToFolders').checked = finalScope.bookmarksBar_applyToFolders;
+        document.getElementById('bookmarksBar_applyToPages').checked = finalScope.bookmarksBar_applyToPages;
+        document.getElementById('inside_applyToFolders').checked = finalScope.inside_applyToFolders;
+        document.getElementById('inside_applyToPages').checked = finalScope.inside_applyToPages;
     });
 }
 
